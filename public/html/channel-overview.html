@@ -1,0 +1,18 @@
+<div class="center-item">
+    <h1>Information for @subDomain</h1>
+    <div class="row">
+        <div class="col-md-8">
+            <div id="graph-container"></div>
+        </div>
+        <div class="col-md-4" ng-controller="topController">
+            <h3>Top pages in the last hour</h3>
+            <ul>
+                <li ng-repeat="x in pages"><a href="#/pages/{{ x[0] }}">{{ x[0] + ', ' + x[1] }}</a></li>
+            </ul>
+            <h3>Top pages in the last hour</h3>
+            <ul>
+                <li ng-repeat="x in users"><a href="#/users/{{ x[0] }}">{{ x[0] + ', ' + x[1] }}</a></li>
+            </ul>
+        </div>
+    </div>
+</div>

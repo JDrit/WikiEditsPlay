@@ -16,21 +16,11 @@ class Application extends Controller {
 
   def index = Action { request =>
     Logger.info("Serving index page...")
-
-    val javascripts = {
-      if (Play.isDev) {
-        // Load all .js and .coffeescript files within app/assets
-        Option(Play.getFile("app/assets")).
-          filter(_.exists).
-          map(findScripts).
-          getOrElse(Nil)
-      } else {
-        // Concated and minified by UglifyJS
-        "concat.min.js" :: Nil
-      }
+    request.getQueryString("subDomain") match {
+      case Some(subDomain) => Ok(views.html.index(subDomain))
+      case None => Ok(views.html.index("en.wikipedia"))
     }
 
-    Ok(views.html.index(javascripts))
   }
 
   private def findScripts(base: File): Seq[String] = {
