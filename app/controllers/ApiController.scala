@@ -74,18 +74,21 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   /** --------------- UPDATE DATABASE API ----------------------------------------------- */
   def addLog() = Action.async { request =>
-    Future {
-      request.body.asJson match {
-        case None => BadRequest
+    dbConfig.db.run {
+      (request.body.asJson match {
+        case None =>
+          Logger.error("payload body is not json")
+          DBIO.seq()
         case Some(json) =>
           json.validate[List[Log]] match {
             case logs: JsSuccess[List[Log]] =>
-              logs.get foreach println
+              Logger.info("inserting logs")
               Edit.insert(logs.get)
-            case _ => Logger.error(s"could not parse json $json")
+            case e: JsError =>
+              Logger.error("could not parse JSON")
+              DBIO.seq()
           }
-          Ok
-      }
+      }).map(q => Ok)
     }
   }
 

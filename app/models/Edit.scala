@@ -7,10 +7,8 @@ import slick.driver.PostgresDriver.api._
 import slick.lifted.Tag
 
 object Edit {
-  //val insertLogs = Compiled((logs: List[Log]) => TableQuery[Edit].forceInsertAll((logs map toEdit)).)
 
-
-  def insert(logs: List[Log]) = TableQuery[Edit].forceInsertAll(logs map toEdit)
+  def insert(logs: List[Log]) = DBIO.seq(TableQuery[Edit] ++= logs.map(toEdit))
 
   private def toEdit(log: Log) =
     (log.channel, log.page, log.diff, log.username, log.comment, new Timestamp((log.timestamp)))
