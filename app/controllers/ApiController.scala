@@ -3,16 +3,21 @@ package controllers
 import java.sql.Timestamp
 import javax.inject.Inject
 
-import models.{PageTops, Edits, ChannelTops}
-import play.api.Play
+import play.Logger
+
+import scala.concurrent.Future
+
+import models._
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.Jsonp
+import play.api.libs.functional.syntax._
 import play.api.mvc.{Action, Controller}
-import play.api.libs.json.{JsValue, Writes, Json}
+import play.api.libs.json._
 import slick.driver.JdbcProfile
-import slick.lifted.TableQuery
 import slick.driver.PostgresDriver.api._
 import play.api.libs.concurrent.Execution.Implicits._
+
+case class Log(channel: String, comment: String, diff: String, page: String, timestamp: Long, username: String)
 
 class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends Controller {
   val dbConfig = dbConfigProvider.get[JdbcProfile]
@@ -27,30 +32,18 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
     def writes(p: (String, Int)): JsValue = Json.arr(p._1, p._2)
   }
 
-  private val channelQuery = Compiled((subDomain: ConstColumn[String]) => TableQuery[ChannelTops]
-    .filter(_.channel === subDomain)
-    .sortBy(_.timestamp)
-    .map(t => (t.timestamp, t.count)))
+  implicit val logReads: Reads[Log] = (
+    (JsPath \ "channel").read[String] and
+      (JsPath \ "comment").read[String] and
+      (JsPath \ "diff").read[String] and
+      (JsPath \ "page").read[String] and
+      (JsPath \ "timestamp").read[Long] and
+      (JsPath \ "username").read[String]
+    )(Log.apply _)
 
-  private val pagesQuery = Compiled((subDomain: ConstColumn[String]) => TableQuery[PageTops]
-    .filter(p => p.channel === subDomain && p.timestamp === TableQuery[PageTops].map(_.timestamp).max)
-    .sortBy(_.count.desc)
-    .map(p => (p.page, p.count)))
-
-  private val usersQuery = Compiled((subDomain: ConstColumn[String]) => TableQuery[Edits]
-    .filter(_.channel === subDomain)
-    .groupBy(_.username)
-    .map { case (username, seq) => (username, seq.length) }
-    .sortBy(_._2.reverse)
-    .take(20))
-
-  private val channelUpdateQuery = Compiled((subDomain: ConstColumn[String]) => TableQuery[ChannelTops]
-    .filter(r => r.channel === subDomain && r.timestamp === TableQuery[ChannelTops].filter(_.channel === subDomain).map(_.timestamp).max)
-    .map(r => (r.timestamp, r.count))
-    .take(1))
 
   def channelEdits(subDomain: String) = Action.async { request =>
-    dbConfig.db.run(channelQuery(subDomain).result).map { seq =>
+    dbConfig.db.run(ChannelEdits.allTimestamps(subDomain).result).map { seq =>
       request.getQueryString("callback") match {
         case Some(callback) => Ok(Jsonp(callback, Json.toJson(seq)))
         case None => Ok(Json.toJson(seq))
@@ -58,24 +51,51 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
     }
   }
 
+  /** Gets the most current channel edits / hr */
   def channelEditsUpdate(subDomain: String) = Action.async { request =>
-    dbConfig.db.run(channelUpdateQuery(subDomain).result).map { seq =>
-      if (seq.isEmpty) {
-        BadRequest
-      } else {
-        request.getQueryString("callback") match {
-          case Some(callback) => Ok(Jsonp(callback, Json.toJson(seq.head)))
-          case None => Ok(Json.toJson(seq.head))
-        }
+    dbConfig.db.run(ChannelEdits.mostCurrent(subDomain).result).map { seq =>
+      if (seq.isEmpty) BadRequest
+      else request.getQueryString("callback") match {
+        case Some(callback) => Ok(Jsonp(callback, Json.toJson(seq.head)))
+        case None => Ok(Json.toJson(seq.head))
       }
     }
   }
 
   def topPages(subDomain: String) = Action.async {
-    dbConfig.db.run(pagesQuery(subDomain).result).map(seq => Ok(Json.toJson(seq)))
+    dbConfig.db.run(PageEdits.currentTopPages(subDomain).result).map(seq => Ok(Json.toJson(seq)))
   }
 
   def topUsers(subDomain: String) = Action.async {
-    dbConfig.db.run(usersQuery(subDomain).result).map(seq => Ok(Json.toJson(seq)))
+    dbConfig.db.run(UserEdits.totalMostActiveUsers(subDomain).result).map(seq => Ok(Json.toJson(seq)))
   }
+
+
+
+  /** --------------- UPDATE DATABASE API ----------------------------------------------- */
+  def addLog() = Action.async { request =>
+    Future {
+      request.body.asJson match {
+        case None => BadRequest
+        case Some(json) =>
+          json.validate[List[Log]] match {
+            case logs: JsSuccess[List[Log]] =>
+              logs.get foreach println
+              Edit.insert(logs.get)
+            case _ => Logger.error(s"could not parse json $json")
+          }
+          Ok
+      }
+    }
+  }
+
+  def addPageEdits() = Action { Ok("") }
+
+  def addTopUsers() = Action { Ok("") }
+
+  def addTopPages() = Action { Ok("") }
+
+  def addVandalism() = Action { Ok("") }
+
+  def addAnomalies() = Action { Ok("") }
 }

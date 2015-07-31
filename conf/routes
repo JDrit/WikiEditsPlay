@@ -3,12 +3,20 @@
 # ~~~~
 
 # Home page
-GET        /                                    controllers.Application.index()
+GET         /                                           controllers.Application.index()
 # GET        /                                    controllers.Assets.at(path = "/public/html/", file = "index.html")
-GET        /api/channel_edits/:subDomain        controllers.ApiController.channelEdits(subDomain: String)
-GET        /api/channel_edits_update/:subDomain controllers.ApiController.channelEditsUpdate(subDomain: String)
-GET        /api/top_pages/:subDomain            controllers.ApiController.topPages(subDomain: String)
-GET        /api/top_users/:subDomain            controllers.ApiController.topUsers(subDomain: String)
+GET         /api/channel_edits/:subDomain               controllers.ApiController.channelEdits(subDomain: String)
+GET         /api/channel_edits_update/:subDomain        controllers.ApiController.channelEditsUpdate(subDomain: String)
+GET         /api/top_pages/:subDomain                   controllers.ApiController.topPages(subDomain: String)
+GET         /api/top_users/:subDomain                   controllers.ApiController.topUsers(subDomain: String)
+
+
+POST        /api/add_log                                controllers.ApiController.addLog()
+POST        /api/add_page_edits                         controllers.ApiController.addPageEdits()
+POST        /api/add_top_pages                          controllers.ApiController.addTopPages()
+POST        /api/add_top_users                          controllers.ApiController.addTopUsers()
+POST        /api/add_vandalism                          controllers.ApiController.addVandalism()
+POST        /api/add_anomalies                          controllers.ApiController.addAnomalies()
 
 # Map static resources from the /public folder to the /assets URL path
-GET        /assets/*file                        controllers.Assets.versioned(path="/public", file: Asset)
+GET         /assets/*file                               controllers.Assets.versioned(path="/public", file: Asset)
