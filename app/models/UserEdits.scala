@@ -7,12 +7,6 @@ import slick.driver.PostgresDriver.api._
 import slick.lifted.{TableQuery, Tag}
 
 object UserEdits {
-  val totalMostActiveUsers = Compiled((subDomain: ConstColumn[String]) => TableQuery[Edit]
-    .filter(_.channel === subDomain)
-    .groupBy(_.username)
-    .map { case (username, seq) => (username, seq.length) }
-    .sortBy(_._2.reverse)
-    .take(20))
 
   def insert(users: TopUserContainer) = DBIO.seq(TableQuery[UserEdits] ++= toEdits(users))
 
