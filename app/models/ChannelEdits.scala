@@ -2,6 +2,7 @@ package models
 
 import java.sql.Timestamp
 
+import controllers.ChannelsPayload
 import slick.driver.PostgresDriver.api._
 import slick.lifted.{TableQuery, Tag}
 
@@ -11,10 +12,23 @@ object ChannelEdits {
     .sortBy(_.timestamp)
     .map(t => (t.timestamp, t.count)))
 
-  val mostCurrent = Compiled((subDomain: ConstColumn[String]) => TableQuery[ChannelEdits]
-    .filter(r => r.channel === subDomain && r.timestamp === TableQuery[ChannelEdits].filter(_.channel === subDomain).map(_.timestamp).max)
-    .map(r => (r.timestamp, r.count))
-    .take(1))
+  val mostCurrent = Compiled((subDomain: ConstColumn[String]) => {
+    val maxTime = TableQuery[ChannelEdits].filter(_.channel === subDomain)
+      .map(_.timestamp).max
+    
+    TableQuery[ChannelEdits]
+      .filter(r => r.channel === subDomain && r.timestamp === maxTime)
+      .map(r => (r.timestamp, r.count))
+      .take(1)
+  })
+
+  def insert(edits: ChannelsPayload) = 
+    DBIO.seq(TableQuery[ChannelEdits] ++= toEdits(edits))
+
+
+  private def toEdits(edits: ChannelsPayload) = edits.channels.map { channel => 
+    (channel.channel, channel.count, new Timestamp(edits.timestamp))
+  }
 }
 
 

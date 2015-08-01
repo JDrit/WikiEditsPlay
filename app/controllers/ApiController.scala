@@ -17,7 +17,16 @@ import slick.driver.JdbcProfile
 import slick.driver.PostgresDriver.api._
 import play.api.libs.concurrent.Execution.Implicits._
 
-case class Log(channel: String, comment: String, diff: String, page: String, timestamp: Long, username: String)
+case class Log(channel: String, comment: String, diff: String, 
+  page: String, timestamp: Long, username: String)
+case class ChannelCount(channel: String, count: Long)
+case class ChannelsPayload(timestamp: Long, channels: List[ChannelCount])
+
+case class TopPage(channel: String, page: String, count: Long)
+case class TopPageContainer(timestamp: Long, pages: List[TopPage])
+
+case class TopUser(channel: String, username: String, count: Long)
+case class TopUserContainer(timestamp: Long, users: List[TopUser])
 
 class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends Controller {
   val dbConfig = dbConfigProvider.get[JdbcProfile]
@@ -40,6 +49,38 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
       (JsPath \ "timestamp").read[Long] and
       (JsPath \ "username").read[String]
     )(Log.apply _)
+
+  implicit val channelCountReads: Reads[ChannelCount] = (
+    (JsPath \ "channel").read[String] and
+      (JsPath \ "count").read[Long]
+    )(ChannelCount.apply _)
+
+  implicit val channelsPayloadReads: Reads[ChannelsPayload] = (
+    (JsPath \ "timestamp").read[Long] and
+      (JsPath \ "page_edits").read[List[ChannelCount]]
+    )(ChannelsPayload.apply _)
+
+  implicit val topPageContainerReads: Reads[TopPageContainer] = (
+    (JsPath \ "timestamp").read[Long] and
+      (JsPath \ "top_pages").read[List[TopPage]]
+    )(TopPageContainer.apply _)
+
+  implicit val topPageReads: Reads[TopPage] = (
+    (JsPath \ "channel").read[String] and
+      (JsPath \ "page").read[String] and
+      (JsPath \ "count").read[Long]
+    )(TopPage.apply _)
+
+  implicit val topUserContainerReads: Reads[TopUserContainer] = (
+    (JsPath \ "timestamp").read[Long] and
+      (JsPath \ "top_users").read[List[TopUser]]
+    )(TopUserContainer.apply _)
+
+  implicit val topUserReads: Reads[TopUser] = (
+    (JsPath \ "channel").read[String] and
+      (JsPath \ "username").read[String] and
+      (JsPath \ "count").read[Long]
+    )(TopUser.apply _)
 
 
   def channelEdits(subDomain: String) = Action.async { request =>
@@ -74,31 +115,49 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   /** --------------- UPDATE DATABASE API ----------------------------------------------- */
   def addLog() = Action.async { request =>
-    dbConfig.db.run {
-      (request.body.asJson match {
-        case None =>
-          Logger.error("payload body is not json")
-          DBIO.seq()
-        case Some(json) =>
-          json.validate[List[Log]] match {
-            case logs: JsSuccess[List[Log]] =>
-              Logger.info("inserting logs")
-              Edit.insert(logs.get)
-            case e: JsError =>
-              Logger.error("could not parse JSON")
-              DBIO.seq()
-          }
-      }).map(q => Ok)
-    }
+    request.body.asJson
+      .map(json => json.validate[List[Log]])
+      .map(edits => Edit.insert(edits.get))
+      .map(action => dbConfig.db.run(action).map(q => Ok))
+      .getOrElse(Future { BadRequest })
   }
 
-  def addPageEdits() = Action { Ok("") }
+  def addPageEdits() = Action.async { request =>
+    request.body.asJson
+      .map(json => json.validate[ChannelsPayload])
+      .map(edits => ChannelEdits.insert(edits.get))
+      .map(action => dbConfig.db.run(action).map(q => Ok))
+      .getOrElse(Future { BadRequest })
+  }
 
-  def addTopUsers() = Action { Ok("") }
+  def addTopUsers() = Action.async { request =>
+    request.body.asJson
+      .map(json => json.validate[TopUserContainer])
+      .map(users => UserEdits.insert(users.get))
+      .map(action => dbConfig.db.run(action).map(q => Ok))
+      .getOrElse(Future { BadRequest })
+  }
 
-  def addTopPages() = Action { Ok("") }
+  def addTopPages() = Action.async { request =>
+    request.body.asJson
+      .map(json => json.validate[TopPageContainer])
+      .map(pages => PageEdits.insert(pages.get))
+      .map(action => dbConfig.db.run(action).map(q => Ok))
+      .getOrElse(Future { BadRequest })
+  }
 
-  def addVandalism() = Action { Ok("") }
+  def addVandalism() = Action.async { request =>
+    request.body.asJson
+      .map(json => json.validate[Log])
+      .map(logs => Vandalism.insert(logs))
+      .map(action => dbConfig.db.run(action).map(q => Ok))
+      .getOrElse(Future { BadRequest })
+  }
 
-  def addAnomalies() = Action { Ok("") }
+  def addAnomalies() = Action.async { request =>
+    request.body.asJson
+      .map(json => json.validate[Log])
+      .map(logs => Anomaly.insert(logs))
+      .map(action => dbConfig.db.run(action).map(q => Ok))
+      .getOrElse(Future { BadRequest })  }
 }
