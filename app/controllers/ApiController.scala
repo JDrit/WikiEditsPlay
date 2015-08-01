@@ -44,7 +44,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   }
 
   def topUsers(subDomain: String) = Action.async {
-    dbConfig.db.run(UserEdits.totalMostActiveUsers(subDomain).result).map(seq => Ok(Json.toJson(seq)))
+    dbConfig.db.run(Edit.activeUsersForDomain(subDomain).result).map(seq => Ok(Json.toJson(seq)))
   }
 
 
