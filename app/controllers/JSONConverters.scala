@@ -25,6 +25,7 @@ case class TopUserContainer(timestamp: Long, users: List[TopUser])
  * the web client
  */
 object JSONConverters {
+
   implicit val writer1 = new Writes[(Timestamp, Long)] {
     def writes(t: (Timestamp, Long)): JsValue = Json.arr(t._1.getTime, t._2)
   }
@@ -34,6 +35,10 @@ object JSONConverters {
   implicit val writer3 = new Writes[(String, Int)] {
     def writes(p: (String, Int)): JsValue = Json.arr(p._1, p._2)
   }
+
+  /*implicit val writer4 = new Writes[List[(Long, Long)]] {
+    def writes(p: List[(Long, Long)]): JsValue = Json.arr(p.map(e => Json.arr(JsNumber(e._1), JsNumber(e._2))))
+  }*/
 
   implicit val logReads: Reads[Log] = (
     (JsPath \ "channel").read[String] and

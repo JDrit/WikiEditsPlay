@@ -28,8 +28,13 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
     }
   }
 
+  def totalEdits() = Action.async {
+    dbConfig.db.run(Edit.allEdits).map { seq => Ok(Json.toJson(seq.toList)) }
+  }
+
   /** Gets the most current channel edits / hr */
   def channelEditsUpdate(subDomain: String) = Action.async { request =>
+
     dbConfig.db.run(ChannelEdits.mostCurrent(subDomain).result).map { seq =>
       if (seq.isEmpty) BadRequest
       else request.getQueryString("callback") match {

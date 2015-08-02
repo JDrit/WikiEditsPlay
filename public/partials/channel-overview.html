@@ -1,10 +1,10 @@
-<div class="center-item">
-    <h1>Information for @subDomain</h1>
+<div class="center-item" ng-controller="top-controller">
+    <h1>Information for {{domain}}</h1>
     <div class="row">
         <div class="col-md-8">
-            <div id="graph-container"></div>
+            <highchart id="mainGraph" config="graphConfig" class="span10"></highchart>
         </div>
-        <div class="col-md-4" ng-controller="topController">
+        <div class="col-md-4">
             <h3>Top pages in the last hour</h3>
             <ul>
                 <li ng-repeat="x in pages"><a href="#/pages/{{ x[0] }}">{{ x[0] + ', ' + x[1] }}</a></li>

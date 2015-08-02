@@ -1,12 +1,23 @@
 package models
 
 import java.sql.Timestamp
+import java.util.Date
 
 import controllers.Log
 import slick.driver.PostgresDriver.api._
 import slick.lifted.{TableQuery, Tag}
 
 object Edit {
+
+  val allEdits = sql"""SELECT
+         date_trunc('minute', timestamp) as minute,
+         count(*) as count
+         FROM log
+         group by minute
+         order by minute""".as[(Timestamp, Long)]
+
+
+  val allTimestamps = TableQuery[ChannelEdits].sortBy(_.timestamp).map(t => (t.timestamp, t.count))
 
   val editsPerPage = Compiled((subDomain: ConstColumn[String], page: ConstColumn[String]) =>
     TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.page === page)

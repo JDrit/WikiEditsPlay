@@ -16,8 +16,8 @@ object PageEdits {
       .map(p => (p.page, p.count))
   })
 
-  def insert(pages: TopPageContainer) = 
-    DBIO.seq(TableQuery[PageEdits] ++= toEdits(pages))
+  def insert(pages: TopPageContainer) =
+    DBIO.seq(TableQuery[PageEdits].delete, TableQuery[PageEdits] ++= toEdits(pages))
 
   private def toEdits(pages: TopPageContainer) = pages.pages.map { page =>
     (page.channel, page.page, page.count, new Timestamp(pages.timestamp))

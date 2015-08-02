@@ -8,7 +8,8 @@ import slick.lifted.{TableQuery, Tag}
 
 object UserEdits {
 
-  def insert(users: TopUserContainer) = DBIO.seq(TableQuery[UserEdits] ++= toEdits(users))
+  def insert(users: TopUserContainer) =
+    DBIO.seq(TableQuery[UserEdits].delete, TableQuery[UserEdits] ++= toEdits(users))
 
   private def toEdits(users: TopUserContainer) = users.users.map { user =>
     (user.channel, user.username, user.count, new Timestamp(users.timestamp))   

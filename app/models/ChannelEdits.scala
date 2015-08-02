@@ -15,7 +15,7 @@ object ChannelEdits {
   val mostCurrent = Compiled((subDomain: ConstColumn[String]) => {
     val maxTime = TableQuery[ChannelEdits].filter(_.channel === subDomain)
       .map(_.timestamp).max
-    
+
     TableQuery[ChannelEdits]
       .filter(r => r.channel === subDomain && r.timestamp === maxTime)
       .map(r => (r.timestamp, r.count))
