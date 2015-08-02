@@ -19,6 +19,8 @@ case class TopPageContainer(timestamp: Long, pages: List[TopPage])
 case class TopUser(channel: String, username: String, count: Long)
 case class TopUserContainer(timestamp: Long, users: List[TopUser])
 
+case class AnomalyCase(channel: String, page: String, mean: Double, stdDev: Double, timestamp: Long, count: Long)
+
 
 /**
  * Json reader and writers used to parse JSON fron the stream and to return results to
@@ -36,9 +38,14 @@ object JSONConverters {
     def writes(p: (String, Int)): JsValue = Json.arr(p._1, p._2)
   }
 
-  /*implicit val writer4 = new Writes[List[(Long, Long)]] {
-    def writes(p: List[(Long, Long)]): JsValue = Json.arr(p.map(e => Json.arr(JsNumber(e._1), JsNumber(e._2))))
-  }*/
+  implicit val anomalyReads: Reads[AnomalyCase] = (
+    (JsPath \ "channel").read[String] and
+      (JsPath \ "page").read[String] and
+      (JsPath \ "mean").read[Double] and
+      (JsPath \ "standard_deviation").read[Double] and
+      (JsPath \ "timestamp").read[Long] and
+      (JsPath \ "count").read[Long]
+    )(AnomalyCase.apply _)
 
   implicit val logReads: Reads[Log] = (
     (JsPath \ "channel").read[String] and

@@ -61,47 +61,49 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   def addLog() = Action.async { request =>
     request.body.asJson
       .map(json => json.validate[List[Log]])
-      .map(edits => Edit.insert(edits.get))
-      .map(action => dbConfig.db.run(action).map(q => Ok))
-      .getOrElse(Future { BadRequest })
+      .map {
+        case JsSuccess(edits, path) => dbConfig.db.run(Edit.insert(edits)).map(q => Ok)
+      }.getOrElse(Future { BadRequest })
   }
 
   def addPageEdits() = Action.async { request =>
     request.body.asJson
       .map(json => json.validate[ChannelsPayload])
-      .map(edits => ChannelEdits.insert(edits.get))
-      .map(action => dbConfig.db.run(action).map(q => Ok))
-      .getOrElse(Future { BadRequest })
+      .map {
+        case JsSuccess(edits, path) => dbConfig.db.run(ChannelEdits.insert(edits)).map(q => Ok)
+      }.getOrElse(Future { BadRequest })
   }
 
   def addTopUsers() = Action.async { request =>
     request.body.asJson
       .map(json => json.validate[TopUserContainer])
-      .map(users => UserEdits.insert(users.get))
-      .map(action => dbConfig.db.run(action).map(q => Ok))
-      .getOrElse(Future { BadRequest })
+      .map {
+        case JsSuccess(users, path) => dbConfig.db.run(UserEdits.insert(users)).map(q => Ok)
+      }.getOrElse(Future { BadRequest })
   }
 
   def addTopPages() = Action.async { request =>
     request.body.asJson
       .map(json => json.validate[TopPageContainer])
-      .map(pages => PageEdits.insert(pages.get))
-      .map(action => dbConfig.db.run(action).map(q => Ok))
-      .getOrElse(Future { BadRequest })
+      .map {
+        case JsSuccess(pages, path) => dbConfig.db.run(PageEdits.insert(pages)).map(q => Ok)
+      }.getOrElse(Future { BadRequest })
   }
 
   def addVandalism() = Action.async { request =>
     request.body.asJson
       .map(json => json.validate[List[Log]])
-      .map(logs => Vandalism.insert(logs.get))
-      .map(action => dbConfig.db.run(action).map(q => Ok))
-      .getOrElse(Future { BadRequest })
+      .map {
+        case JsSuccess(logs, path) => dbConfig.db.run(Vandalism.insert(logs)).map(q => Ok)
+      }.getOrElse(Future { BadRequest })
   }
 
   def addAnomalies() = Action.async { request =>
     request.body.asJson
-      .map(json => json.validate[List[Log]])
-      .map(logs => Anomaly.insert(logs.get))
-      .map(action => dbConfig.db.run(action).map(q => Ok))
-      .getOrElse(Future { BadRequest })  }
+      .map(json => json.validate[List[AnomalyCase]])
+      .map {
+        case JsSuccess(anomalies, path) => dbConfig.db.run(Anomaly.insert(anomalies)).map(q => Ok)
+      }.getOrElse(Future { BadRequest })
+  }
+
 }
