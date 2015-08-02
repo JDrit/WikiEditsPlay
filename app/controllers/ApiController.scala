@@ -3,6 +3,8 @@ package controllers
 
 import javax.inject.Inject
 
+import play.Logger
+
 import scala.concurrent.Future
 
 import JSONConverters._
@@ -49,7 +51,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   }
 
   def topUsers(subDomain: String) = Action.async {
-    dbConfig.db.run(Edit.activeUsersForDomain(subDomain).result).map(seq => Ok(Json.toJson(seq)))
+    dbConfig.db.run(UserEdits.currentTopUsers(subDomain).result).map(seq => Ok(Json.toJson(seq)))
   }
 
 
@@ -63,7 +65,10 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
       .map(json => json.validate[List[Log]])
       .map {
         case JsSuccess(edits, path) => dbConfig.db.run(Edit.insert(edits)).map(q => Ok)
-      }.getOrElse(Future { BadRequest })
+        case _ =>
+          Logger.error("could not parse JSON for logs")
+          Future { BadRequest }
+      }.get
   }
 
   def addPageEdits() = Action.async { request =>
@@ -71,7 +76,10 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
       .map(json => json.validate[ChannelsPayload])
       .map {
         case JsSuccess(edits, path) => dbConfig.db.run(ChannelEdits.insert(edits)).map(q => Ok)
-      }.getOrElse(Future { BadRequest })
+        case _ =>
+          Logger.error("could not parse JSON for channel edits")
+          Future { BadRequest }
+      }.get
   }
 
   def addTopUsers() = Action.async { request =>
@@ -79,7 +87,10 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
       .map(json => json.validate[TopUserContainer])
       .map {
         case JsSuccess(users, path) => dbConfig.db.run(UserEdits.insert(users)).map(q => Ok)
-      }.getOrElse(Future { BadRequest })
+        case _ =>
+          Logger.error("could not parse JSON for top users")
+          Future { BadRequest }
+      }.get
   }
 
   def addTopPages() = Action.async { request =>
@@ -87,7 +98,10 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
       .map(json => json.validate[TopPageContainer])
       .map {
         case JsSuccess(pages, path) => dbConfig.db.run(PageEdits.insert(pages)).map(q => Ok)
-      }.getOrElse(Future { BadRequest })
+        case _ =>
+          Logger.error("could not parse JSON for top pages")
+          Future { BadRequest }
+      }.get
   }
 
   def addVandalism() = Action.async { request =>
@@ -95,7 +109,10 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
       .map(json => json.validate[List[Log]])
       .map {
         case JsSuccess(logs, path) => dbConfig.db.run(Vandalism.insert(logs)).map(q => Ok)
-      }.getOrElse(Future { BadRequest })
+        case _ =>
+          Logger.error("could not parse JSON for vandalism")
+          Future { BadRequest }
+      }.get
   }
 
   def addAnomalies() = Action.async { request =>
@@ -103,7 +120,10 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
       .map(json => json.validate[List[AnomalyCase]])
       .map {
         case JsSuccess(anomalies, path) => dbConfig.db.run(Anomaly.insert(anomalies)).map(q => Ok)
-      }.getOrElse(Future { BadRequest })
+        case _ =>
+          Logger.error("could not parse JSON for anomalies")
+          Future { BadRequest }
+      }.get
   }
 
 }

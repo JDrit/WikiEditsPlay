@@ -17,25 +17,10 @@ object Edit {
          order by minute""".as[(Timestamp, Long)]
 
 
-  val allTimestamps = TableQuery[ChannelEdits].sortBy(_.timestamp).map(t => (t.timestamp, t.count))
-
   val editsPerPage = Compiled((subDomain: ConstColumn[String], page: ConstColumn[String]) =>
     TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.page === page)
       .sortBy(_.timestamp.reverse))
 
-  val activeUsersForPage = Compiled((subDomain: ConstColumn[String], page: ConstColumn[String]) =>
-    TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.page === page)
-      .groupBy(_.username)
-      .map { case (username, seq) => (username, seq.length) }
-      .sortBy(_._2.reverse)
-      .take(20))
-
-  val activeUsersForDomain = Compiled((subDomain: ConstColumn[String]) =>
-    TableQuery[Edit].filter(_.channel === subDomain)
-      .groupBy(_.username)
-      .map { case (username, seq) => (username, seq.length) }
-      .sortBy(_._2.reverse)
-      .take(20))
 
   val editsForUser = Compiled((subDomain: ConstColumn[String], user: ConstColumn[String]) =>
     TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.username === user)

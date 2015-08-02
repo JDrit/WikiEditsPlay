@@ -8,6 +8,15 @@ import slick.lifted.{TableQuery, Tag}
 
 object UserEdits {
 
+  val currentTopUsers = Compiled((subDomain: ConstColumn[String]) => {
+    val maxTime = TableQuery[UserEdits].filter(_.channel === subDomain)
+      .map(_.timestamp).max
+
+    TableQuery[UserEdits].filter(p => p.channel === subDomain && p.timestamp === maxTime)
+      .sortBy(_.count.desc)
+      .map(p => (p.username, p.count))
+  })
+
   def insert(users: TopUserContainer) =
     DBIO.seq(TableQuery[UserEdits].delete, TableQuery[UserEdits] ++= toEdits(users))
 
