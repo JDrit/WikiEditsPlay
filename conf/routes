@@ -9,7 +9,11 @@ GET         /api/total_edits                            controllers.ApiControlle
 GET         /api/channel_edits/:subDomain               controllers.ApiController.channelEdits(subDomain: String)
 GET         /api/channel_edits_update/:subDomain        controllers.ApiController.channelEditsUpdate(subDomain: String)
 GET         /api/top_pages/:subDomain                   controllers.ApiController.topPages(subDomain: String)
+GET         /api/top_pages_range/:subDomain             controllers.ApiController.topPagesRange(subDomain: String)
 GET         /api/top_users/:subDomain                   controllers.ApiController.topUsers(subDomain: String)
+GET         /api/top_users_range/:subDomain             controllers.ApiController.topUsersRange(subDomain: String)
+GET         /api/all_domains                            controllers.ApiController.listDomains()
+GET         /api/search_domain                          controllers.ApiController.searchDomain()
 
 
 POST        /api/add_log                                controllers.ApiController.addLog()

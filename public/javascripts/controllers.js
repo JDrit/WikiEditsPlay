@@ -1,8 +1,17 @@
 
 
-var wikiControllers = angular.module('wikiControllers', ['highcharts-ng']);
+var wikiControllers = angular.module('wikiControllers', ['highcharts-ng', 'ui.bootstrap']);
+
+wikiControllers.controller('searchController', ['$scope', '$http', function($scope, $http) {
+    $scope.selected = undefined;
+    $scope.domains = ["en.wikipedia", "wikidata.wikipedia"];
+    $http.get('/api/all_domains').success(function (data) {
+        $scope.domains = data;
+    });
+}]);
 
 wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http', function($scope, $routeParams, $http) {
+
     $scope.graphConfig = {
         useHighStocks: true,
         options: {
@@ -59,12 +68,12 @@ wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http
     $("#wikidata-link").removeClass("active");
     $("#en-link").removeClass("active");
     $http.get('/api/total_edits').success(function (data) {
-        console.log(data);
         $scope.graphConfig.series[0].data = data;
     });
 }]);
 
 wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http', function($scope, $routeParams, $http) {
+    var lastmove = new Date().getTime();
 
     $scope.domain = $routeParams.domain;
     $scope.graphConfig = {
@@ -117,6 +126,21 @@ wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http'
                 text: 'Page Edits'
             }
         },
+        xAxis: {
+            events:{
+                afterSetExtremes: function(){
+                    if (new Date().getTime() - lastmove > 1000) {
+                        $http.get('/api/top_pages_range/' + $scope.domain + '?start=' + this.min + '&end=' + this.max).success(function (response) {
+                            $scope.pages = response;
+                        });
+                        $http.get('/api/top_users_range/' + $scope.domain + '?start' + this.min + '&end=' + this.max).success(function (response) {
+                            $scope.users = response;
+                        });
+                    }
+                    lastmove = new Date().getTime();
+                }
+            }
+        },
         title: {
             text: 'Number of Pages Being Edited per Hour'
         },
@@ -141,12 +165,5 @@ wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http'
     $http.get('/api/channel_edits/' + $scope.domain).success(function (data) {
         $scope.graphConfig.series[0].data = data;
     });
-    $http.get("/api/top_pages/en.wikipedia").success(function(response) {
-        $scope.pages = response;
-    });
-    $http.get("/api/top_users/en.wikipedia").success(function(response) {
-        $scope.users = response;
-    });
-
 
 }]);

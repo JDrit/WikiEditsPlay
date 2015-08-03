@@ -16,6 +16,23 @@ object Edit {
          group by minute
          order by minute""".as[(Timestamp, Long)]
 
+  val listOfChannels = sql"SELECT DISTINCT(channel) from log".as[String]
+
+  val topPages = Compiled((subDomain: ConstColumn[String], start: ConstColumn[Timestamp], end: ConstColumn[Timestamp]) =>
+    TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.timestamp >= start && edit.timestamp <= end)
+      .groupBy(_.page)
+      .map {
+        case (page, seq) => (page, seq.length)
+      }.sortBy(_._2.reverse)
+      .take(20))
+
+  val topUsers = Compiled((subDomain: ConstColumn[String], start: ConstColumn[Timestamp], end: ConstColumn[Timestamp]) =>
+    TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.timestamp >= start && edit.timestamp <= end)
+      .groupBy(_.username)
+      .map {
+      case (username, seq) => (username, seq.length)
+    }.sortBy(_._2.reverse)
+    .take(20))
 
   val editsPerPage = Compiled((subDomain: ConstColumn[String], page: ConstColumn[String]) =>
     TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.page === page)

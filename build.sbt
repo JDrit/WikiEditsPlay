@@ -19,7 +19,8 @@ libraryDependencies ++= Seq(
   "org.webjars" % "angularjs" % "1.4.2",
   "org.webjars" % "angular-ui-bootstrap" % "0.13.0",
   "org.webjars" % "highstock" % "2.1.4",
-  "org.webjars" % "highcharts-ng" % "0.0.8"
+  "org.webjars" % "highcharts-ng" % "0.0.8",
+  "org.webjars" % "angular-ui-bootstrap" % "0.13.1"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
