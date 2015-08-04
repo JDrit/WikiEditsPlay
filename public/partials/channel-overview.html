@@ -1,5 +1,5 @@
 <div class="center-item" ng-controller="top-controller">
-    <h1>Information for {{domain}}</h1>
+    <h1>Subdomain Information for {{domain}}</h1>
     <div class="row">
         <div class="col-md-8">
             <highchart id="mainGraph" config="graphConfig" class="span10"></highchart>
@@ -7,11 +7,11 @@
         <div class="col-md-4">
             <h3>Active pages in the last hour</h3>
             <ul>
-                <li ng-repeat="x in pages"><a href="#/pages/{{ x[0] }}">{{ x[0] + ', ' + x[1] }}</a></li>
+                <li ng-repeat="x in pages"><a href="#/page/{{domain}}/{{ x[0] | escape }}">{{ x[0] + ', ' + x[1] }}</a></li>
             </ul>
             <h3>Active users in the last hour</h3>
             <ul>
-                <li ng-repeat="x in users"><a href="#/users/{{ x[0] }}">{{ x[0] + ', ' + x[1] }}</a></li>
+                <li ng-repeat="x in users"><a href="#/user/{{domain}}/{{ x[0] }}">{{ x[0] + ', ' + x[1] }}</a></li>
             </ul>
         </div>
     </div>

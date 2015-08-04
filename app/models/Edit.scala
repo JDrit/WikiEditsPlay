@@ -14,7 +14,7 @@ object Edit {
          count(*) AS count
          FROM log
          GROUP BY minute
-         GROUP BY minute""".as[(Timestamp, Long)]
+         ORDER BY minute""".as[(Timestamp, Long)]
 
   val listOfChannels = sql"SELECT DISTINCT(channel) from log".as[String]
 
@@ -34,9 +34,16 @@ object Edit {
       }.sortBy(_._2.reverse)
       .take(20))
 
-  val editsForPage = Compiled((subDomain: ConstColumn[String], page: ConstColumn[String]) =>
-    TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.page === page)
-      .sortBy(_.timestamp.reverse))
+  def editsForPage(domain: String, page: String) =
+    sql"""SELECT
+            date_trunc('minute', timestamp) AS minute,
+            count(*) AS COUNT
+           FROM log
+           WHERE
+            channel = $domain AND
+            page = $page
+           GROUP BY minute
+           ORDER BY minute""".as[(Timestamp, Long)]
 
 
   val editsForUser = Compiled((subDomain: ConstColumn[String], user: ConstColumn[String]) =>

@@ -10,60 +10,53 @@ wikiControllers.controller('searchController', ['$scope', '$http', function($sco
     });
 }]);
 
+wikiControllers.controller('pageController', ['$scope', '$routeParams', '$http', function($scope, $routeParams, $http) {
+    $scope.domain = $routeParams.domain;
+    $scope.page = $routeParams.page;
+    $scope.graphConfig = {
+        useHighStocks: true,
+        options: {
+            chart: { type: 'line', zoomType: 'x' },
+            navigator: { enabled:true },
+            rangeSelector: {
+                buttons: [
+                    { type: 'hour', count: 24, text: '1d' },
+                    { type: 'day', count: 3, text: '3d' },
+                    { type: 'month', count: 1, text: '1m' },
+                    { type: 'all',  text: 'All' }]
+            },
+            tooltip: { pointFormat: "{point.y:.0f} edits" }
+        },
+        yAxis: { title: { text: 'Page Edits' } },
+        title: { text: 'Page Edits' },
+        subtitle: { text: 'subtitle' },
+        series: [{ name: 'Page edits', type: 'spline', data: [] }]
+    };
+    $http.get('/api/page_edits/' + $scope.domain + '/' + $scope.page).success(function (data) {
+        $scope.graphConfig.series[0].data = data;
+    });
+}]);
+
 wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http', function($scope, $routeParams, $http) {
 
     $scope.graphConfig = {
         useHighStocks: true,
         options: {
-            chart: {
-                type: 'line',
-                zoomType: 'x'
-            },
-            navigator: {
-                enabled:true
-            },
+            chart: { type: 'line', zoomType: 'x' },
+            navigator: { enabled:true },
             rangeSelector: {
-                buttons: [{
-                    type: 'minute',
-                    count: 5,
-                    text: '5m'
-                },{
-                    type: 'hour',
-                    count: 1,
-                    text: '1h'
-                }, {
-                    type: 'hour',
-                    count: 24,
-                    text: '1d'
-                }, {
-                    type: 'day',
-                    count: 3,
-                    text: '3d'
-                },{
-                    type: 'all',
-                    text: 'All'
-                }]
+                buttons: [{ type: 'minute', count: 5, text: '5m' },
+                    { type: 'hour', count: 1, text: '1h' },
+                    { type: 'hour', count: 24, text: '1d' },
+                    { type: 'day', count: 3, text: '3d' },
+                    { type: 'all',  text: 'All' }]
             },
-            tooltip: {
-                pointFormat: "{point.y:.0f} edits"
-            }
+            tooltip: { pointFormat: "{point.y:.0f} edits" }
         },
-        yAxis: {
-            title: {
-                text: 'Page Edits'
-            }
-        },
-        title: {
-            text: 'Total Page Edits'
-        },
-        subtitle: {
-            text: 'subtitle'
-        },
-        series: [{
-            name: 'Page edits',
-            type: 'spline',
-            data: []
-        }]
+        yAxis: { title: { text: 'Page Edits' } },
+        title: { text: 'Total Page Edits' },
+        subtitle: { text: 'subtitle' },
+        series: [{ name: 'Page edits', type: 'spline', data: [] }]
     };
     $("#wikidata-link").removeClass("active");
     $("#en-link").removeClass("active");
@@ -72,8 +65,9 @@ wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http
     });
 }]);
 
-wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http', function($scope, $routeParams, $http) {
-    var lastmove = new Date().getTime();
+wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http',
+        function($scope, $routeParams, $http) {
+    var lastMove = new Date().getTime();
 
     $scope.domain = $routeParams.domain;
     $scope.graphConfig = {
@@ -81,55 +75,23 @@ wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http'
         options: {
             chart: {
                 type: 'line',
-                zoomType: 'x',
-                events: {
-                    load: function() {
-                        /*setInterval(function() {
-                            $http.get('/api/channel_edits_update/' + $scope.domain).success(function(newData) {
-                                $("#mainGraph").highcharts().series[0].addPoint(newData, true, true);
-                            });
-                        }, 5000);*/
-                    }
-                }
+                zoomType: 'x'
             },
-            navigator: {
-                enabled:true
-            },
+            navigator: { enabled:true },
             rangeSelector: {
-                buttons: [{
-                    type: 'minute',
-                    count: 5,
-                    text: '5m'
-                },{
-                    type: 'hour',
-                    count: 1,
-                    text: '1h'
-                }, {
-                    type: 'hour',
-                    count: 24,
-                    text: '1d'
-                }, {
-                    type: 'day',
-                    count: 3,
-                    text: '3d'
-                },{
-                    type: 'all',
-                    text: 'All'
-                }]
+                buttons: [{ type: 'minute', count: 5, text: '5m' },
+                    { type: 'hour', count: 1, text: '1h' },
+                    { type: 'hour', count: 24, text: '1d' },
+                    { type: 'day', count: 3, text: '3d' },
+                    { type: 'all', text: 'All' }]
             },
-            tooltip: {
-                pointFormat: "{point.y:.0f} edits/hr"
-            }
+            tooltip: { pointFormat: "{point.y:.0f} edits/hr" }
         },
-        yAxis: {
-            title: {
-                text: 'Page Edits'
-            }
-        },
+        yAxis: { title: { text: 'Page Edits' } },
         xAxis: {
             events:{
                 afterSetExtremes: function(){
-                    if (new Date().getTime() - lastmove > 1000) {
+                    if (new Date().getTime() - lastMove > 1000) {
                         $http.get('/api/top_pages_range/' + $scope.domain + '?start=' + this.min + '&end=' + this.max).success(function (response) {
                             $scope.pages = response;
                         });
@@ -137,21 +99,13 @@ wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http'
                             $scope.users = response;
                         });
                     }
-                    lastmove = new Date().getTime();
+                    lastMove = new Date().getTime();
                 }
             }
         },
-        title: {
-            text: 'Number of Pages Being Edited per Hour'
-        },
-        subtitle: {
-            text: 'subtitle'
-        },
-        series: [{
-            name: 'Page edits',
-            type: 'spline',
-            data: []
-        }]
+        title: { text: 'Number of Pages Being Edited per Hour' },
+        subtitle: { text: 'subtitle' },
+        series: [{ name: 'Page edits', type: 'spline', data: [] }]
     };
 
     if ($scope.domain == "en.wikipedia") {
@@ -165,5 +119,4 @@ wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http'
     $http.get('/api/channel_edits/' + $scope.domain).success(function (data) {
         $scope.graphConfig.series[0].data = data;
     });
-
 }]);

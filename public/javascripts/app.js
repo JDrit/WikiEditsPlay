@@ -1,6 +1,10 @@
 
 var wikiApp = angular.module('wikiApp', ['ngRoute', 'ngResource', 'highcharts-ng', 'wikiControllers']);
 
+wikiApp.filter('escape', function() {
+    return window.encodeURIComponent;
+});
+
 wikiApp.config(['$routeProvider',
     function($routeProvider) {
         $routeProvider.
@@ -13,6 +17,9 @@ wikiApp.config(['$routeProvider',
             when('/domain/:domain', {
                 templateUrl: '/assets/partials/channel-overview.html',
                 controller: 'top-controller'
+            }).
+            when('/page/:domain/:page', {
+                templateUrl: '/assets/partials/page-overview.html'
             }).
             otherwise({
                 redirectTo: '/'

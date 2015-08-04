@@ -44,7 +44,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   /** Gets all the edits for a given page in a subdomain */
   def editsForPage(subDomain: String, page: String) = Action.async {
-    dbConfig.db.run(Edit.editsForPage(subDomain, page).result).map { seq =>
+    dbConfig.db.run(Edit.editsForPage(subDomain, page)).map { seq =>
       Ok(Json.toJson(seq.toList))
     }
   }
@@ -52,7 +52,8 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   /** Gets all the edits that a user has performed in a given subdomain */
   def editsForUser(subDomain: String, username: String) = Action.async {
     dbConfig.db.run(Edit.editsForUser(subDomain, username).result).map { seq =>
-      Ok(Json.toJson(seq.toList))
+      BadRequest
+      //Ok(Json.toJson(seq.toList))
      }
   }
  
