@@ -10,11 +10,11 @@ import slick.lifted.{TableQuery, Tag}
 object Edit {
 
   val allEdits = sql"""SELECT
-         date_trunc('minute', timestamp) as minute,
-         count(*) as count
+         date_trunc('minute', timestamp) AS minute,
+         count(*) AS count
          FROM log
-         group by minute
-         order by minute""".as[(Timestamp, Long)]
+         GROUP BY minute
+         GROUP BY minute""".as[(Timestamp, Long)]
 
   val listOfChannels = sql"SELECT DISTINCT(channel) from log".as[String]
 
@@ -30,11 +30,11 @@ object Edit {
     TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.timestamp >= start && edit.timestamp <= end)
       .groupBy(_.username)
       .map {
-      case (username, seq) => (username, seq.length)
-    }.sortBy(_._2.reverse)
-    .take(20))
+        case (username, seq) => (username, seq.length)
+      }.sortBy(_._2.reverse)
+      .take(20))
 
-  val editsPerPage = Compiled((subDomain: ConstColumn[String], page: ConstColumn[String]) =>
+  val editsForPage = Compiled((subDomain: ConstColumn[String], page: ConstColumn[String]) =>
     TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.page === page)
       .sortBy(_.timestamp.reverse))
 

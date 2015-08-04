@@ -37,35 +37,25 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   /** Gets the most current channel edits / hr */
   def channelEditsUpdate(subDomain: String) = Action.async { request =>
-    dbConfig.db.run(ChannelEdits.mostCurrent(subDomain).result).map { seq =>
-      if (seq.isEmpty) BadRequest
-      else request.getQueryString("callback") match {
-        case Some(callback) => Ok(Jsonp(callback, Json.toJson(seq.head)))
-        case None => Ok(Json.toJson(seq.head))
-      }
+    dbConfig.db.run(ChannelEdits.mostCurrent(subDomain).result).map { seq => 
+      Ok(Json.toJson(seq.toList)) 
     }
   }
 
-  /** Gets the most active pages for a given subdomain in the time interval */
-  def topPagesRange(subDomain: String) = Action.async { request =>
-    val start = request.getQueryString("start") match {
-      case Some(num) => new Timestamp(num.toDouble.toLong)
-      case None => new Timestamp(0)
-    }
-    val end = request.getQueryString("end") match {
-      case Some(num) => new Timestamp(num.toDouble.toLong)
-      case None => new Timestamp(System.currentTimeMillis())
-    }
-    Cache.getOrElse(s"top-pages-$subDomain-$start-$end", 60 * 60) {
-      dbConfig.db.run(Edit.topPages(subDomain, start, end).result).map(seq => Ok(Json.toJson(seq)))
+  /** Gets all the edits for a given page in a subdomain */
+  def editsForPage(subDomain: String, page: String) = Action.async {
+    dbConfig.db.run(Edit.editsForPage(subDomain, page).result).map { seq =>
+      Ok(Json.toJson(seq.toList))
     }
   }
 
-  /** Gets the list of the current most active pages for a subdomain */
-  def topPages(subDomain: String) = Action.async {
-    dbConfig.db.run(PageEdits.currentTopPages(subDomain).result).map(seq => Ok(Json.toJson(seq)))
+  /** Gets all the edits that a user has performed in a given subdomain */
+  def editsForUser(subDomain: String, username: String) = Action.async {
+    dbConfig.db.run(Edit.editsForUser(subDomain, username).result).map { seq =>
+      Ok(Json.toJson(seq.toList))
+     }
   }
-
+ 
   /** Lists all of the domains that are being cataloged */
   def listDomains() = Cache.getOrElse("list-domains", 60 * 60) {
     Action.async {
@@ -81,6 +71,30 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
     }
   }
 
+  /** Gets the most active pages for a given subdomain in the time interval */
+  def topPagesRange(subDomain: String) = Action.async { request =>
+    val start = request.getQueryString("start") match {
+      case Some(num) => new Timestamp(num.toDouble.toLong)
+      case None => new Timestamp(0)
+    }
+    val end = request.getQueryString("end") match {
+      case Some(num) => new Timestamp(num.toDouble.toLong)
+      case None => new Timestamp(System.currentTimeMillis())
+    }
+    Cache.getOrElse(s"top-pages-$subDomain-$start-$end", 60 * 60) {
+      dbConfig.db.run(Edit.topPages(subDomain, start, end).result).map { seq => 
+        Ok(Json.toJson(seq))
+      }
+    }
+  }
+
+  /** Gets the list of the current most active pages for a subdomain */
+  def topPages(subDomain: String) = Action.async {
+    dbConfig.db.run(PageEdits.currentTopPages(subDomain).result).map { seq => 
+      Ok(Json.toJson(seq))
+    }
+  }
+
   /** Gets the most active users in the given time range */
   def topUsersRange(subDomain: String) = Action.async { request =>
     val start = request.getQueryString("start") match {
@@ -92,13 +106,17 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
       case None => new Timestamp(System.currentTimeMillis())
     }
     Cache.getOrElse(s"top-users-$subDomain-$start-$end", 60 * 60) {
-      dbConfig.db.run(Edit.topUsers(subDomain, start, end).result).map(seq => Ok(Json.toJson(seq)))
+      dbConfig.db.run(Edit.topUsers(subDomain, start, end).result).map { seq => 
+        Ok(Json.toJson(seq))
+      }
     }
   }
 
   /** Gets the current most active users for a channel */
   def topUsers(subDomain: String) = Action.async {
-    dbConfig.db.run(UserEdits.currentTopUsers(subDomain).result).map(seq => Ok(Json.toJson(seq)))
+    dbConfig.db.run(UserEdits.currentTopUsers(subDomain).result).map { seq => 
+      Ok(Json.toJson(seq))
+    }
   }
 
 
