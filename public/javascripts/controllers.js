@@ -27,7 +27,7 @@ wikiControllers.controller('pageController', ['$scope', '$routeParams', '$http',
             },
             tooltip: { pointFormat: "{point.y:.0f} edits" }
         },
-        yAxis: { title: { text: 'Page Edits' } },
+        yAxis: { title: { text: 'Page Edits' }, min: 0 },
         title: { text: 'Page Edits' },
         subtitle: { text: 'subtitle' },
         series: [{ name: 'Page edits', type: 'spline', data: [] }]
@@ -53,7 +53,7 @@ wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http
             },
             tooltip: { pointFormat: "{point.y:.0f} edits" }
         },
-        yAxis: { title: { text: 'Page Edits' } },
+        yAxis: { title: { text: 'Page Edits' }, min: 0 },
         title: { text: 'Total Page Edits' },
         subtitle: { text: 'subtitle' },
         series: [{ name: 'Page edits', type: 'spline', data: [] }]

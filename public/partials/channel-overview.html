@@ -5,11 +5,11 @@
             <highchart id="mainGraph" config="graphConfig" class="span10"></highchart>
         </div>
         <div class="col-md-4">
-            <h3>Active pages in the last hour</h3>
+            <h3>Active Pages</h3>
             <ul>
                 <li ng-repeat="x in pages"><a href="#/page/{{domain}}/{{ x[0] | escape }}">{{ x[0] + ', ' + x[1] }}</a></li>
             </ul>
-            <h3>Active users in the last hour</h3>
+            <h3>Active Users</h3>
             <ul>
                 <li ng-repeat="x in users"><a href="#/user/{{domain}}/{{ x[0] }}">{{ x[0] + ', ' + x[1] }}</a></li>
             </ul>

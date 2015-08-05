@@ -28,12 +28,30 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   /** Generates the graph data for the given subdomain */
   def channelEdits(subDomain: String) = Action.async { request =>
     //dbConfig.db.run(ChannelEdits.allTimestamps(subDomain).result).map { seq => Ok(Json.toJson(seq)) }
-    dbConfig.db.run(Edit.domainEdits(subDomain)).map(seq => Ok(Json.toJson(seq)))
+    dbConfig.db.run(Edit.domainEdits(subDomain)).map { seq => 
+      val format = insertGaps(seq.toList, seq.head._1.getTime)
+      Ok(Json.toJson(format))
+    }
   }
+
+  final val MINUTE = 60000L
+
+  def insertGaps(data: List[(Timestamp, Long)], current: Long): List[(Timestamp, Long)] = data match {
+    case Nil => Nil
+    case l @ (time, count) :: xs => if (time.getTime() - current <= MINUTE) {
+      (time, count) :: insertGaps(xs, time.getTime() + MINUTE)
+    } else {
+      (new Timestamp(current), 0L) :: insertGaps(l, current + MINUTE)
+    }
+  }
+
 
   /** generates the data for the graph on the front page */
   def totalEdits() = Action.async {
-    dbConfig.db.run(Edit.allEdits).map { seq => Ok(Json.toJson(seq.toList)) }
+    dbConfig.db.run(Edit.allEdits).map { seq => 
+      val format = insertGaps(seq.toList, seq.head._1.getTime)
+      Ok(Json.toJson(format)) 
+    }
   }
 
   /** Gets the most current channel edits / hr */
@@ -46,7 +64,8 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   /** Gets all the edits for a given page in a subdomain */
   def editsForPage(subDomain: String, page: String) = Action.async {
     dbConfig.db.run(Edit.editsForPage(subDomain, page)).map { seq =>
-      Ok(Json.toJson(seq.toList))
+      val format = insertGaps(seq.toList, seq.head._1.getTime)
+      Ok(Json.toJson(format))
     }
   }
 
