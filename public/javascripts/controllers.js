@@ -85,7 +85,7 @@ wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http'
                     { type: 'day', count: 3, text: '3d' },
                     { type: 'all', text: 'All' }]
             },
-            tooltip: { pointFormat: "{point.y:.0f} edits/hr" }
+            tooltip: { pointFormat: "{point.y:.0f} edits" }
         },
         yAxis: { title: { text: 'Page Edits' } },
         xAxis: {

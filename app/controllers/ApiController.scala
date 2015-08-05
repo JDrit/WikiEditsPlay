@@ -27,7 +27,8 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   /** Generates the graph data for the given subdomain */
   def channelEdits(subDomain: String) = Action.async { request =>
-    dbConfig.db.run(ChannelEdits.allTimestamps(subDomain).result).map { seq => Ok(Json.toJson(seq)) }
+    //dbConfig.db.run(ChannelEdits.allTimestamps(subDomain).result).map { seq => Ok(Json.toJson(seq)) }
+    dbConfig.db.run(Edit.domainEdits(subDomain)).map(seq => Ok(Json.toJson(seq)))
   }
 
   /** generates the data for the graph on the front page */

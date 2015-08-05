@@ -4,19 +4,32 @@ import java.sql.Timestamp
 import java.util.Date
 
 import controllers.Log
+import slick.backend.StaticDatabaseConfig
 import slick.driver.PostgresDriver.api._
 import slick.lifted.{TableQuery, Tag}
 
+@StaticDatabaseConfig("file:conf/application.conf#tsql")
 object Edit {
 
-  val allEdits = sql"""SELECT
+  val allEdits = tsql"""
+        SELECT
          date_trunc('minute', timestamp) AS minute,
          count(*) AS count
-         FROM log
-         GROUP BY minute
-         ORDER BY minute""".as[(Timestamp, Long)]
+        FROM log
+        GROUP BY minute
+        ORDER BY minute"""
 
-  val listOfChannels = sql"SELECT DISTINCT(channel) from log".as[String]
+  val listOfChannels = tsql"SELECT DISTINCT(channel) from log"
+
+  def domainEdits(domain: String) = 
+    tsql"""
+      SELECT
+        date_trunc('minute', timestamp) AS minute,
+        count(*) AS count
+      FROM log
+      WHERE channel = $domain
+      GROUP BY minute
+      ORDER BY minute"""
 
   val topPages = Compiled((subDomain: ConstColumn[String], start: ConstColumn[Timestamp], end: ConstColumn[Timestamp]) =>
     TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.timestamp >= start && edit.timestamp <= end)
@@ -35,7 +48,7 @@ object Edit {
       .take(20))
 
   def editsForPage(domain: String, page: String) =
-    sql"""SELECT
+    tsql"""SELECT
             date_trunc('minute', timestamp) AS minute,
             count(*) AS COUNT
            FROM log
@@ -43,7 +56,7 @@ object Edit {
             channel = $domain AND
             page = $page
            GROUP BY minute
-           ORDER BY minute""".as[(Timestamp, Long)]
+           ORDER BY minute"""
 
 
   val editsForUser = Compiled((subDomain: ConstColumn[String], user: ConstColumn[String]) =>

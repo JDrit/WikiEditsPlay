@@ -1,5 +1,6 @@
 
-var wikiApp = angular.module('wikiApp', ['ngRoute', 'ngResource', 'highcharts-ng', 'wikiControllers']);
+var wikiApp = angular.module('wikiApp', 
+    ['ngRoute', 'ngResource', 'highcharts-ng', 'wikiControllers']);
 
 wikiApp.filter('escape', function() {
     return window.encodeURIComponent;
