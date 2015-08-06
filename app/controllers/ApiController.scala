@@ -38,7 +38,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   def insertGaps(data: List[(Timestamp, Long)], current: Long): List[(Timestamp, Long)] = data match {
     case Nil => Nil
-    case l @ (time, count) :: xs => if (time.getTime() - current <= MINUTE) {
+    case l @ (time, count) :: xs => if (current - time.getTime() <= MINUTE) {
       (time, count) :: insertGaps(xs, time.getTime() + MINUTE)
     } else {
       (new Timestamp(current), 0L) :: insertGaps(l, current + MINUTE)
@@ -63,6 +63,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   /** Gets all the edits for a given page in a subdomain */
   def editsForPage(subDomain: String, page: String) = Action.async {
+    Logger.info(s"geting page views for $subDomain : $page")
     dbConfig.db.run(Edit.editsForPage(subDomain, page)).map { seq =>
       val format = insertGaps(seq.toList, seq.head._1.getTime)
       Ok(Json.toJson(format))

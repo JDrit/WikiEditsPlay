@@ -32,7 +32,7 @@ wikiControllers.controller('pageController', ['$scope', '$routeParams', '$http',
         subtitle: { text: 'subtitle' },
         series: [{ name: 'Page edits', type: 'spline', data: [] }]
     };
-    $http.get('/api/page_edits/' + $scope.domain + '/' + $scope.page).success(function (data) {
+    $http.get('/api/page_edits/' + $scope.domain + '/' + encodeURIComponent($scope.page)).success(function (data) {
         $scope.graphConfig.series[0].data = data;
     });
 }]);

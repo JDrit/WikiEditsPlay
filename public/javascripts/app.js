@@ -19,7 +19,7 @@ wikiApp.config(['$routeProvider',
                 templateUrl: '/assets/partials/channel-overview.html',
                 controller: 'top-controller'
             }).
-            when('/page/:domain/:page', {
+            when('/page/:domain/:page*', {
                 templateUrl: '/assets/partials/page-overview.html'
             }).
             otherwise({
