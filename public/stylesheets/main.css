@@ -1,6 +1,10 @@
 body {
     padding-top: 50px;
 }
+
+footer {
+    padding: 20px;
+}
 .centerItem {
     padding: 40px 15px;
     //text-align: center;

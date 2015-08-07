@@ -62,6 +62,21 @@ object Edit {
       GROUP BY minute
       ORDER BY minute"""
 
+  def usersForPage(domain: String, page: String, start: Timestamp, end: Timestamp) =
+    tsql"""
+      SELECT
+        username,
+        count(*)
+      FROM log
+      WHERE
+        channel = $domain AND
+        page = $page AND
+        timestamp >= $start AND
+        timestamp <= $end
+      GROUP BY username
+      ORDER BY count(*) DESC
+      LIMIT 20"""
+
   val topPages = Compiled((subDomain: ConstColumn[String], start: ConstColumn[Timestamp], end: ConstColumn[Timestamp]) =>
     TableQuery[Edit].filter(edit => edit.channel === subDomain && edit.timestamp >= start && edit.timestamp <= end)
       .groupBy(_.page)

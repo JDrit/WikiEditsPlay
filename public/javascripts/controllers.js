@@ -11,6 +11,7 @@ wikiControllers.controller('searchController', ['$scope', '$http', function($sco
 }]);
 
 wikiControllers.controller('pageController', ['$scope', '$routeParams', '$http', function($scope, $routeParams, $http) {
+    var lastMove = new Date().getTime();
     $scope.domain = $routeParams.domain;
     $scope.page = $routeParams.page;
     $scope.graphConfig = {
@@ -28,6 +29,18 @@ wikiControllers.controller('pageController', ['$scope', '$routeParams', '$http',
             tooltip: { pointFormat: "{point.y:.0f} edits" }
         },
         yAxis: { title: { text: 'Page Edits' }, min: 0 },
+        xAxis: {
+            events:{
+                afterSetExtremes: function(){
+                    if (new Date().getTime() - lastMove > 1000) {
+                        $http.get('/api/user_edits/' + $scope.domain + '/' + encodeURIComponent($scope.page) + '?start=' + this.min + '&end=' + this.max).success(function (data) {
+                            $scope.users = data;
+                        });
+                    }
+                    lastMove = new Date().getTime();
+                }
+            }
+        },
         title: { text: 'Page Edits' },
         subtitle: { text: 'subtitle' },
         series: [{ name: 'Page edits', type: 'spline', data: [] }]
@@ -35,6 +48,7 @@ wikiControllers.controller('pageController', ['$scope', '$routeParams', '$http',
     $http.get('/api/page_edits/' + $scope.domain + '/' + encodeURIComponent($scope.page)).success(function (data) {
         $scope.graphConfig.series[0].data = data;
     });
+
 }]);
 
 wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http', function($scope, $routeParams, $http) {
@@ -68,7 +82,7 @@ wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http
     });
 }]);
 
-wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http',
+wikiControllers.controller('domain-controller',  ['$scope', '$routeParams', '$http',
         function($scope, $routeParams, $http) {
     var lastMove = new Date().getTime();
 
@@ -76,10 +90,7 @@ wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http'
     $scope.graphConfig = {
         useHighStocks: true,
         options: {
-            chart: {
-                type: 'line',
-                zoomType: 'x'
-            },
+            chart: { type: 'line', zoomType: 'x' },
             navigator: { enabled:true },
             rangeSelector: {
                 buttons: [{ type: 'minute', count: 5, text: '5m' },
