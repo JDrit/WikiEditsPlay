@@ -17,6 +17,9 @@ GET         /api/top_users_range/:subDomain             controllers.ApiControlle
 
 GET         /api/all_domains                            controllers.ApiController.listDomains()
 GET         /api/search_domain                          controllers.ApiController.searchDomain()
+GET         /api/top_domains                            controllers.ApiController.topDomains()
+
+GET         /api/ip_addrs/:subDomain                    controllers.ApiController.ipAddrs(subDomain)
 
 GET         /api/page_edits/:subDomain/:page            controllers.ApiController.editsForPage(subDomain, page)
 GET         /api/user_edits/:subDomain/:username        controllers.ApiController.editsForUser(subDomain, username)

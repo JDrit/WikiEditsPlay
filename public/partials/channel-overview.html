@@ -1,8 +1,12 @@
-<div class="center-item" ng-controller="top-controller">
+<div class="centerItem" ng-controller="top-controller">
     <h1>Subdomain Information for {{domain}}</h1>
     <div class="row">
         <div class="col-md-8">
             <highchart id="mainGraph" config="graphConfig" class="span10"></highchart>
+            <h3>Most Active Anonymous Edits</h3>
+            <ul>
+                <li ng-repeat="ip in ipAddrs"><a href="#/user/{{ ip[0] }}">{{ ip[0] }} ({{ ip[1] }}) - {{ ip[2] }} edits</a></li>
+            </ul>
         </div>
         <div class="col-md-4">
             <h3>Active Pages</h3>

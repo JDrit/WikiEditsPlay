@@ -1,53 +1,70 @@
 package controllers
 
-
-import java.sql.Timestamp
 import javax.inject.Inject
+import java.sql.Timestamp
 
-import play.Logger
-
-
-import scala.concurrent.Future
-
-import JSONConverters._
-import models._
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.cache.Cache
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.libs.Jsonp
-import play.api.mvc.{Action, Controller}
 import play.api.libs.json._
+import play.api.libs.Jsonp
+import play.api.libs.ws._
+import play.api.mvc.{Action, Controller}
 import play.api.Play.current
+import play.Logger
 import slick.driver.JdbcProfile
 import slick.driver.PostgresDriver.api._
 
+import JSONConverters._
+import models._
+
 class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends Controller {
   val dbConfig = dbConfigProvider.get[JdbcProfile]
-
-  /** Generates the graph data for the given subdomain */
-  def channelEdits(subDomain: String) = Action.async { request =>
-    //dbConfig.db.run(ChannelEdits.allTimestamps(subDomain).result).map { seq => Ok(Json.toJson(seq)) }
-    dbConfig.db.run(Edit.domainEdits(subDomain)).map { seq => 
-      val format = insertGaps(seq.toList, seq.head._1.getTime)
-      Ok(Json.toJson(format))
-    }
-  }
 
   final val MINUTE = 60000L
 
   def insertGaps(data: List[(Timestamp, Long)], current: Long): List[(Timestamp, Long)] = data match {
     case Nil => Nil
-    case l @ (time, count) :: xs => if (current - time.getTime() <= MINUTE) {
+    case l @ (time, count) :: xs => if (time.getTime() - current <= MINUTE) {
       (time, count) :: insertGaps(xs, time.getTime() + MINUTE)
     } else {
       (new Timestamp(current), 0L) :: insertGaps(l, current + MINUTE)
     }
   }
 
+  /** Generates the graph data for the given subdomain */
+  def channelEdits(subDomain: String) = Action.async { request =>
+    Logger.info(s"Getting the domain edits for $subDomain")
+    dbConfig.db.run(Edit.domainEdits(subDomain)).map { seq => 
+      val format = insertGaps(seq.toList, seq.head._1.getTime)
+      Ok(Json.toJson(format))
+    }
+  }
+
+  def getIpCity(ip: String): Future[(String, String)] = Cache.getOrElse(s"ip-info-$ip", 60 * 60) {
+    WS.url(s"http://ip-api.com/json/$ip").withRequestTimeout(1000).get().map { response =>
+      Logger.info(s"Getting infomation for $ip")
+      (ip, (response.json \ "city").as[String] + " " + (response.json \ "country").as[String])
+    }
+  }
+
+  def ipAddrs(domain: String) = Action.async { 
+    dbConfig.db.run(Edit.mostCommonIpsForDomain(domain)).map { seq =>
+      val ipInfo = Future.sequence(seq.map { case (ip, count) => getIpCity(ip) })
+      val ipResult = Await.result(ipInfo, 1 second).toList 
+      val output = seq.zip(ipResult).map { case ((ip, count), (ip2, city)) => 
+        (ip, city, count) 
+      }
+      Ok(Json.toJson(output))
+     }
+  }
 
   /** generates the data for the graph on the front page */
   def totalEdits() = Action.async {
+    Logger.info(s"Getting the total page edits")
     dbConfig.db.run(Edit.allEdits).map { seq => 
       val format = insertGaps(seq.toList, seq.head._1.getTime)
       Ok(Json.toJson(format)) 
@@ -63,7 +80,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   /** Gets all the edits for a given page in a subdomain */
   def editsForPage(subDomain: String, page: String) = Action.async {
-    Logger.info(s"geting page views for $subDomain : $page")
+    Logger.info(s"Geting page views for $subDomain : $page")
     dbConfig.db.run(Edit.editsForPage(subDomain, page)).map { seq =>
       val format = insertGaps(seq.toList, seq.head._1.getTime)
       Ok(Json.toJson(format))
@@ -83,6 +100,12 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
     Action.async {
       dbConfig.db.run(Edit.listOfChannels).map(seq => Ok(Json.toJson(seq)))
     }
+  }
+
+  def topDomains() = Cache.getOrElse("top-domains", 60 * 60) {
+    Action.async { request =>
+      dbConfig.db.run(Edit.topDomains).map(seq => Ok(Json.toJson(seq)))
+     }
   }
 
   /** Redirects the search box to the correct subdomain */
@@ -140,8 +163,6 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
       Ok(Json.toJson(seq))
     }
   }
-
-
 
   /** ----------------------------------------------------------------------------------- */
   /** ---------------------- UPDATE DATABASE API ---------------------------------------- */

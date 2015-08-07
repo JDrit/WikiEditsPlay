@@ -21,6 +21,37 @@ object Edit {
 
   val listOfChannels = tsql"SELECT DISTINCT(channel) from log"
 
+  val mostCommonIps = tsql"""
+        SELECT 
+          username, 
+          count(*) AS count
+        FROM log
+        WHERE username ~ '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{0,3}\.[0-9]{0,3}$$' 
+        GROUP BY username 
+        ORDER BY count DESC
+        LIMIT 10"""
+
+  def mostCommonIpsForDomain(domain: String) = tsql"""
+        SELECT 
+          username, 
+          count(*) AS count
+        FROM log
+        WHERE 
+          channel = $domain AND
+          username ~ '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{0,3}\.[0-9]{0,3}$$'
+        GROUP BY username 
+        ORDER BY count DESC
+        LIMIT 10""" 
+
+  val topDomains = tsql"""
+        SELECT
+          channel, 
+          count(*) AS count
+        FROM log 
+        GROUP BY channel 
+        ORDER BY count DESC
+        LIMIT 10"""
+
   def domainEdits(domain: String) = 
     tsql"""
       SELECT

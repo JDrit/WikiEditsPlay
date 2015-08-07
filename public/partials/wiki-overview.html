@@ -1,8 +1,20 @@
-<div class="center-item" ng-controller="main-controller">
+<div class="centerItem" ng-controller="main-controller">
     <h1>Page edits for all of Wikipedia</h1>
+    <h4><em>
+        Wikipedia gets a ton of page edits every day. Use this
+        site to view page edits for all of Wikipedia.
+    </em></h4>
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-8">
             <highchart id="mainGraph" config="graphConfig" class="span10"></highchart>
+        </div>
+        <div class="col-md-4">
+            <br>
+            <br>
+            <h3>Most Active Subdomains</h3>
+            <ul>
+                <li class="domainLink" ng-repeat="domain in topDomains"><a href="#/domain/{{ domain[0] }}">{{ domain[0] }} - {{ domain[1] }} edits</a></li>
+            </ul>
         </div>
     </div>
 </div>

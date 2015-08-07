@@ -39,6 +39,10 @@ object JSONConverters {
     def writes(p: (String, Int)): JsValue = Json.arr(p._1, p._2)
   }
 
+  implicit val writer4 = new Writes[(String, String, Long)] {
+    def writes(p: (String, String, Long)): JsValue = Json.arr(p._1, p._2, p._3)
+  }
+
   implicit val anomalyReads: Reads[AnomalyCase] = (
     (JsPath \ "channel").read[String] and
       (JsPath \ "page").read[String] and

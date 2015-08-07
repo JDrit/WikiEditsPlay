@@ -63,6 +63,9 @@ wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http
     $http.get('/api/total_edits').success(function (data) {
         $scope.graphConfig.series[0].data = data;
     });
+    $http.get('/api/top_domains').success(function (data) {
+        $scope.topDomains = data;
+    });
 }]);
 
 wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http',
@@ -87,7 +90,7 @@ wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http'
             },
             tooltip: { pointFormat: "{point.y:.0f} edits" }
         },
-        yAxis: { title: { text: 'Page Edits' } },
+        yAxis: { title: { text: 'Page Edits' }, min: 0 },
         xAxis: {
             events:{
                 afterSetExtremes: function(){
@@ -119,4 +122,8 @@ wikiControllers.controller('top-controller',  ['$scope', '$routeParams', '$http'
     $http.get('/api/channel_edits/' + $scope.domain).success(function (data) {
         $scope.graphConfig.series[0].data = data;
     });
+    $http.get('/api/ip_addrs/' + $scope.domain).success(function (data) {
+        $scope.ipAddrs = data;
+    });
+
 }]);

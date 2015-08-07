@@ -1,19 +1,17 @@
 body {
     padding-top: 50px;
 }
-.center-item {
+.centerItem {
     padding: 40px 15px;
     //text-align: center;
-}
-
-#channel-input {
-    height: 30px;
-    font-size: 14px;
-    line-height: 24px;
 }
 
 @media (min-width: 1200px) {
     .container{
         width: 1300px;
     }
+}
+
+.domainLink {
+    font-size: 16px;
 }
