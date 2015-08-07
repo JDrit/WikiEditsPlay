@@ -3,6 +3,7 @@ package controllers
 import javax.inject.Inject
 import java.sql.Timestamp
 
+import scala.annotation.tailrec
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
@@ -30,7 +31,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   def totalEdits() = Action.async {
     Logger.info(s"Getting the total page edits")
     dbConfig.db.run(Edit.allEdits).map { seq => 
-      val format = insertGaps(seq.toList, seq.head._1.getTime)
+      val format = insertGaps(seq.toList)
       Ok(Json.toJson(format)) 
     }
   }
@@ -41,7 +42,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   def editsForPage(subDomain: String, page: String) = Action.async {
     Logger.info(s"Geting page views for $subDomain : $page")
     dbConfig.db.run(Edit.editsForPage(subDomain, page)).map { seq =>
-      val format = insertGaps(seq.toList, seq.head._1.getTime)
+      val format = insertGaps(seq.toList)
       Ok(Json.toJson(format))
     }
   }
@@ -49,6 +50,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   /** Gets the most active users for the given domain + page */
   def usersForPage(subDomain: String, page: String) = Action.async { request =>
     val (start, end) = getTimeRange(request)
+    Logger.info(s"start = $start end = $end")
     dbConfig.db.run(Edit.usersForPage(subDomain, page, start, end)).map { seq =>
       Ok(Json.toJson(seq))
     }
@@ -94,7 +96,7 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
   def channelEdits(subDomain: String) = Action.async { request =>
     Logger.info(s"Getting the domain edits for $subDomain")
     dbConfig.db.run(Edit.domainEdits(subDomain)).map { seq =>
-      val format = insertGaps(seq.toList, seq.head._1.getTime)
+      val format = insertGaps(seq.toList)
       Ok(Json.toJson(format))
     }
   }
@@ -141,12 +143,24 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   final val MINUTE = 60000L
 
-  def insertGaps(data: List[(Timestamp, Long)], current: Long): List[(Timestamp, Long)] = data match {
-    case Nil => Nil
-    case l @ (time, count) :: xs => if (time.getTime() - current <= MINUTE) {
-      (time, count) :: insertGaps(xs, time.getTime() + MINUTE)
-    } else {
-      (new Timestamp(current), 0L) :: insertGaps(l, current + MINUTE)
+  def insertGaps(data: List[(Timestamp, Long)]): List[(Timestamp, Long)] = {
+
+    @tailrec
+    def tailRecInsert(
+        data: List[(Timestamp, Long)], 
+        current: Long,
+        accum: List[(Timestamp, Long)]): List[(Timestamp, Long)] = data match {
+      case Nil => accum
+      case l @ (time, count) :: xs => if (time.getTime() - current <= MINUTE) {
+        tailRecInsert(xs, time.getTime() + MINUTE, (time, count) :: accum)
+      } else {
+        tailRecInsert(l, current + MINUTE, (new Timestamp(current), 0L) :: accum)
+      }
+    }
+    
+    data match {
+      case Nil => Nil
+      case l @ x :: xs => tailRecInsert(l, x._1.getTime, Nil).reverse
     }
   }
 

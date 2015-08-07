@@ -48,7 +48,9 @@ wikiControllers.controller('pageController', ['$scope', '$routeParams', '$http',
     $http.get('/api/page_edits/' + $scope.domain + '/' + encodeURIComponent($scope.page)).success(function (data) {
         $scope.graphConfig.series[0].data = data;
     });
-
+    $http.get('/api/user_edits/' + $scope.domain + '/' + encodeURIComponent($scope.page)).success(function (data) {
+        $scope.users = data;
+    });
 }]);
 
 wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http', function($scope, $routeParams, $http) {
