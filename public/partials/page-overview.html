@@ -7,7 +7,7 @@
         <div class="col-md-4">
             <h3>Most Active Users:</h3>
             <ul>
-                <li ng-repeat="user in users"><a href="#/user/{{ domain }}/{{ user[0] | escape }}">{{ user[0] }} - {{ user[1] }} edits</a></li>
+                <li ng-repeat="user in users"><a href="#/user/{{ domain }}/{{ user[0] | escape }}">{{ user[0] }} - {{ user[1] | number }} edits</a></li>
             </ul>
         </div>
     </div>

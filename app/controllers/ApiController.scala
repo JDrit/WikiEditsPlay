@@ -143,24 +143,28 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
 
   final val MINUTE = 60000L
 
-  def insertGaps(data: List[(Timestamp, Long)]): List[(Timestamp, Long)] = {
+  def insertGaps(data: List[(Timestamp, Long)]): List[(Long, Long)] = {
 
     @tailrec
     def tailRecInsert(
         data: List[(Timestamp, Long)], 
         current: Long,
-        accum: List[(Timestamp, Long)]): List[(Timestamp, Long)] = data match {
+        accum: List[(Long, Long)]): List[(Long, Long)] = data match {
       case Nil => accum
       case l @ (time, count) :: xs => if (time.getTime() - current <= MINUTE) {
-        tailRecInsert(xs, time.getTime() + MINUTE, (time, count) :: accum)
+        tailRecInsert(xs, time.getTime() + MINUTE, (time.getTime, count) :: accum)
       } else {
-        tailRecInsert(l, current + MINUTE, (new Timestamp(current), 0L) :: accum)
+        tailRecInsert(l, current + MINUTE, (current, 0L) :: accum)
       }
     }
     
     data match {
       case Nil => Nil
-      case l @ x :: xs => tailRecInsert(l, x._1.getTime, Nil).reverse
+      case l @ x :: xs => 
+        val ls: List[(Long, Long)] = tailRecInsert(l, x._1.getTime, Nil)
+        val endBuffer = (System.currentTimeMillis to (ls.head._1 + MINUTE, -1 * MINUTE))
+          .map { time => (time, 0L) }
+        (endBuffer ++ ls).toList.reverse
     }
   }
 

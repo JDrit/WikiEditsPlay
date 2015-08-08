@@ -5,17 +5,17 @@
             <highchart id="mainGraph" config="graphConfig" class="span10"></highchart>
             <h3>Most Active Anonymous Edits</h3>
             <ul>
-                <li ng-repeat="ip in ipAddrs"><a href="#/user/{{ ip[0] }}">{{ ip[0] }} ({{ ip[1] }}) - {{ ip[2] }} edits</a></li>
+                <li ng-repeat="ip in ipAddrs"><a href="#/user/{{ ip[0] }}">{{ ip[0] }} ({{ ip[1] }}) - {{ ip[2] | number }} edits</a></li>
             </ul>
         </div>
         <div class="col-md-4">
             <h3>Active Pages</h3>
             <ul>
-                <li ng-repeat="x in pages"><a href="#/page/{{domain}}/{{ x[0] | escape }}">{{ x[0] + ', ' + x[1] }}</a></li>
+                <li ng-repeat="x in pages"><a href="#/page/{{domain}}/{{ x[0] | escape }}">{{ x[0] }} - {{ x[1] | number }}</a></li>
             </ul>
             <h3>Active Users</h3>
             <ul>
-                <li ng-repeat="x in users"><a href="#/user/{{domain}}/{{ x[0] }}">{{ x[0] + ', ' + x[1] }}</a></li>
+                <li ng-repeat="x in users"><a href="#/user/{{domain}}/{{ x[0] }}">{{ x[0] }} - {{ x[1] | number }}</a></li>
             </ul>
         </div>
     </div>

@@ -29,19 +29,14 @@ case class AnomalyCase(channel: String, page: String, mean: Double, stdDev: Doub
  */
 object JSONConverters {
 
-  implicit val writer1 = new Writes[(Timestamp, Long)] {
-    def writes(t: (Timestamp, Long)): JsValue = Json.arr(t._1.getTime, t._2)
-  }
-  implicit val writer2 = new Writes[(String, Long)] {
-    def writes(p: (String, Long)): JsValue = Json.arr(p._1, p._2)
-  }
-  implicit val writer3 = new Writes[(String, Int)] {
-    def writes(p: (String, Int)): JsValue = Json.arr(p._1, p._2)
+  implicit def tuple2Writes[A, B](implicit aWrites: Writes[A], bWrites: Writes[B]): Writes[Tuple2[A, B]] = new Writes[Tuple2[A, B]] {
+    def writes(tuple: Tuple2[A, B]) = JsArray(Seq(aWrites.writes(tuple._1), bWrites.writes(tuple._2)))
   }
 
-  implicit val writer4 = new Writes[(String, String, Long)] {
-    def writes(p: (String, String, Long)): JsValue = Json.arr(p._1, p._2, p._3)
+  implicit def tuple3Writes[A, B, C](implicit aWrites: Writes[A], bWrites: Writes[B], cWrites: Writes[C]): Writes[Tuple3[A, B, C]] = new Writes[Tuple3[A, B, C]] {
+    def writes(tuple: Tuple3[A, B, C]) = JsArray(Seq(aWrites.writes(tuple._1), bWrites.writes(tuple._2), cWrites.writes(tuple._3)))
   }
+
 
   implicit val anomalyReads: Reads[AnomalyCase] = (
     (JsPath \ "channel").read[String] and

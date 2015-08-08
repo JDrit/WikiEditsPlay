@@ -13,7 +13,7 @@
             <br>
             <h3>Most Active Subdomains</h3>
             <ul>
-                <li class="domainLink" ng-repeat="domain in topDomains"><a href="#/domain/{{ domain[0] }}">{{ domain[0] }} - {{ domain[1] }} edits</a></li>
+                <li class="domainLink" ng-repeat="domain in topDomains"><a href="#/domain/{{ domain[0] }}">{{ domain[0] }} - {{ domain[1] | number }} edits</a></li>
             </ul>
         </div>
     </div>
