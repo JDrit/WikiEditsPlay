@@ -43,11 +43,14 @@ object Edit {
         ORDER BY count DESC
         LIMIT 10""" 
 
-  val topDomains = tsql"""
+  def topDomains(start: Timestamp, end: Timestamp) = tsql"""
         SELECT
           channel, 
           count(*) AS count
         FROM log 
+        WHERE 
+          timestamp >= $start AND
+          timestamp <= $end
         GROUP BY channel 
         ORDER BY count DESC
         LIMIT 10"""

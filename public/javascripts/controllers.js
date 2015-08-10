@@ -54,7 +54,7 @@ wikiControllers.controller('pageController', ['$scope', '$routeParams', '$http',
 }]);
 
 wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http', function($scope, $routeParams, $http) {
-
+    var lastMove = new Date().getTime();
     $scope.graphConfig = {
         useHighStocks: true,
         options: {
@@ -70,6 +70,18 @@ wikiControllers.controller('main-controller',  ['$scope', '$routeParams', '$http
             tooltip: { pointFormat: "{point.y:.0f} edits" }
         },
         yAxis: { title: { text: 'Page Edits' }, min: 0 },
+        xAxis: {
+            events:{
+                afterSetExtremes: function(){
+                    if (new Date().getTime() - lastMove > 1000) {
+                        $http.get('/api/top_domains?start=' + this.min + '&end=' + this.max).success(function (data) {
+                            $scope.topDomains = data;
+                        });
+                    }
+                    lastMove = new Date().getTime();
+                }
+            }
+        },
         title: { text: 'Total Page Edits' },
         subtitle: { text: 'subtitle' },
         series: [{ name: 'Page edits', type: 'spline', data: [] }]

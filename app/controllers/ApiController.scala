@@ -36,6 +36,12 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
     }
   }
 
+  def topDomains() = Action.async { request =>
+    val (start, end) = getTimeRange(request)
+    dbConfig.db.run(Edit.topDomains(start, end)).map(seq => Ok(Json.toJson(seq)))
+  }
+
+
   /** ------------ PER PAGE -------------------------------------------*/
 
   /** Gets all the edits for a given page in a subdomain */
@@ -63,12 +69,6 @@ class ApiController @Inject()(dbConfigProvider: DatabaseConfigProvider) extends 
     Action.async {
       dbConfig.db.run(Edit.listOfChannels).map(seq => Ok(Json.toJson(seq)))
     }
-  }
-
-  def topDomains() = Cache.getOrElse("top-domains", 60 * 60) {
-    Action.async { request =>
-      dbConfig.db.run(Edit.topDomains).map(seq => Ok(Json.toJson(seq)))
-     }
   }
 
   /** Redirects the search box to the correct subdomain */
